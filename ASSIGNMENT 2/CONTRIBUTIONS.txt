@@ -1,0 +1,21 @@
+# 🧑‍💻 Contributions
+
+**Group:** G-02  
+
+---
+
+### Member 1: ADITYA RUHELA
+- Implemented **Task 1** (KEM and SIG listing)  
+- Contributed to **README**  
+
+### Member 2: ABHIK DEY
+- Implemented **Task 2** (KEM demo)  
+- Performed testing and performance measurements  
+
+### Member 3: GULSHAN KUMAR DEWANGAN
+- Implemented **Task 3** (Signature demo)  
+- Helped with **RSA/ECDSA** comparison  
+
+### Member 4: AKASH YADAV
+- Wrote the **Task 4 report**  
+- Reviewed documentation and handled **final submission**
