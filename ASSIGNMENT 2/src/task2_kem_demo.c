@@ -1,110 +1,110 @@
+// kem_demo.c
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <oqs/oqs.h>
-#include <openssl/rsa.h>
-#include <openssl/pem.h>
-#include <openssl/evp.h>
-#include <openssl/ec.h>
-#include <openssl/ecdsa.h>
-#include <openssl/sha.h>
 
-#define MESSAGE "Post-Quantum Cryptography is the future"
-
-void pqc_demo() {
-    printf("\n--- PQC Signature Demo (Dilithium2) ---\n");
-
-    const char *alg = OQS_SIG_alg_dilithium_2;
-    OQS_SIG *sig = OQS_SIG_new(alg);
-    if (sig == NULL) {
-        printf("Error: OQS_SIG_new failed\n");
-        return;
-    }
-
-    uint8_t *public_key = malloc(sig->length_public_key);
-    uint8_t *secret_key = malloc(sig->length_secret_key);
-    uint8_t *signature = malloc(sig->length_signature);
-    size_t sig_len;
-
-    if (OQS_SIG_keypair(sig, public_key, secret_key) != OQS_SUCCESS) {
-        printf("Key generation failed\n");
-        return;
-    }
-
-    if (OQS_SIG_sign(sig, signature, &sig_len, (const uint8_t *)MESSAGE, strlen(MESSAGE), secret_key) != OQS_SUCCESS) {
-        printf("Signing failed\n");
-        return;
-    }
-
-    OQS_STATUS ok = OQS_SIG_verify(sig, (const uint8_t *)MESSAGE, strlen(MESSAGE),
-                                   signature, sig_len, public_key);
-
-    printf("Public key size: %zu bytes\n", sig->length_public_key);
-    printf("Private key size: %zu bytes\n", sig->length_secret_key);
-    printf("Signature size: %zu bytes\n", sig_len);
-    printf("Dilithium2 verification: %s\n", ok == OQS_SUCCESS ? "SUCCESS" : "FAILURE");
-
-    OQS_SIG_free(sig);
-    free(public_key);
-    free(secret_key);
-    free(signature);
+static double timespec_to_ms(const struct timespec *start, const struct timespec *end) {
+    double s = (double)(end->tv_sec - start->tv_sec);
+    double ns = (double)(end->tv_nsec - start->tv_nsec);
+    return s * 1000.0 + ns / 1e6;
 }
 
-void rsa_demo() {
-    printf("\n--- Classical RSA-2048 ---\n");
-    EVP_PKEY_CTX *ctx;
-    EVP_PKEY *pkey = NULL;
-
-    ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
-    EVP_PKEY_keygen_init(ctx);
-    EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048);
-    EVP_PKEY_keygen(ctx, &pkey);
-
-    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
-    unsigned char sig[256];
-    size_t siglen;
-
-    EVP_SignInit(mdctx, EVP_sha256());
-    EVP_SignUpdate(mdctx, MESSAGE, strlen(MESSAGE));
-    EVP_SignFinal(mdctx, sig, (unsigned int *)&siglen, EVP_PKEY_get0_RSA(pkey));
-
-    EVP_MD_CTX_free(mdctx);
-
-    printf("Public key size: ~270 bytes\n");
-    printf("Private key size: ~1200 bytes\n");
-    printf("Signature size: %zu bytes\n", siglen);
-    printf("RSA-2048 verification: SUCCESS\n");
-
-    EVP_PKEY_free(pkey);
-    EVP_PKEY_CTX_free(ctx);
+static void print_hex(const uint8_t *buf, size_t len) {
+    for (size_t i = 0; i < len; ++i) {
+        printf("%02x", buf[i]);
+    }
+    printf("\n");
 }
 
-void ecdsa_demo() {
-    printf("\n--- Classical ECDSA P-256 ---\n");
-    EC_KEY *ec_key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-    EC_KEY_generate_key(ec_key);
+int main(void) {
+    const char *alg = "Kyber512"; // change if you prefer another supported KEM
 
-    unsigned int sig_len;
-    unsigned char signature[256];
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256((unsigned char *)MESSAGE, strlen(MESSAGE), hash);
+    // Create KEM object
+    OQS_KEM *kem = OQS_KEM_new(alg);
+    if (kem == NULL) {
+        fprintf(stderr, "KEM %s not available in this liboqs build.\n", alg);
+        return EXIT_FAILURE;
+    }
 
-    ECDSA_sign(0, hash, SHA256_DIGEST_LENGTH, signature, &sig_len, ec_key);
+    printf("Using KEM: %s\n", kem->method_name);
+    printf("Public key length: %zu\n", kem->length_public_key);
+    printf("Secret key length: %zu\n", kem->length_secret_key);
+    printf("Ciphertext length: %zu\n", kem->length_ciphertext);
+    printf("Shared secret length: %zu\n\n", kem->length_shared_secret);
 
-    int verify = ECDSA_verify(0, hash, SHA256_DIGEST_LENGTH, signature, sig_len, ec_key);
+    uint8_t *pk = malloc(kem->length_public_key);
+    uint8_t *sk = malloc(kem->length_secret_key);
+    uint8_t *ct = malloc(kem->length_ciphertext);
+    uint8_t *ss_bob = malloc(kem->length_shared_secret);
+    uint8_t *ss_alice = malloc(kem->length_shared_secret);
 
-    printf("Public key size: ~65 bytes\n");
-    printf("Private key size: ~121 bytes\n");
-    printf("Signature size: %u bytes\n", sig_len);
-    printf("ECDSA verification: %s\n", verify == 1 ? "SUCCESS" : "FAILURE");
+    if (!pk || !sk || !ct || !ss_bob || !ss_alice) {
+        fprintf(stderr, "malloc failed\n");
+        OQS_KEM_free(kem);
+        return EXIT_FAILURE;
+    }
 
-    EC_KEY_free(ec_key);
-}
+    struct timespec t0, t1;
+    double t_keygen_ms, t_encaps_ms, t_decaps_ms;
 
-int main() {
-    printf("Post-Quantum Digital Signature Comparison\n");
-    pqc_demo();
-    rsa_demo();
-    ecdsa_demo();
-    printf("\nDone.\n");
-    return 0;
+    // Key generation (Alice)
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    if (OQS_KEM_keypair(kem, pk, sk) != OQS_SUCCESS) {
+        fprintf(stderr, "OQS_KEM_keypair failed\n");
+        goto cleanup;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    t_keygen_ms = timespec_to_ms(&t0, &t1);
+
+    // Encapsulation (Bob -> uses Alice's public key)
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    if (OQS_KEM_encaps(kem, ct, ss_bob, pk) != OQS_SUCCESS) {
+        fprintf(stderr, "OQS_KEM_encaps failed\n");
+        goto cleanup;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    t_encaps_ms = timespec_to_ms(&t0, &t1);
+
+    // Decapsulation (Alice)
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    if (OQS_KEM_decaps(kem, ss_alice, ct, sk) != OQS_SUCCESS) {
+        fprintf(stderr, "OQS_KEM_decaps failed\n");
+        goto cleanup;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    t_decaps_ms = timespec_to_ms(&t0, &t1);
+
+    // Print secrets and compare
+    printf("Bob's shared secret  : ");
+    print_hex(ss_bob, kem->length_shared_secret);
+    printf("Alice's shared secret: ");
+    print_hex(ss_alice, kem->length_shared_secret);
+
+    if (memcmp(ss_bob, ss_alice, kem->length_shared_secret) == 0) {
+        printf("\nSUCCESS: shared secrets match.\n");
+    } else {
+        printf("\nFAILURE: shared secrets DO NOT match.\n");
+    }
+
+    printf("\nTimings (single-run):\n");
+    printf("  Key generation: %.3f ms\n", t_keygen_ms);
+    printf("  Encapsulation : %.3f ms\n", t_encaps_ms);
+    printf("  Decapsulation : %.3f ms\n", t_decaps_ms);
+
+cleanup:
+    // Clean sensitive material
+    if (ss_bob) OQS_MEM_cleanse(ss_bob, kem->length_shared_secret);
+    if (ss_alice) OQS_MEM_cleanse(ss_alice, kem->length_shared_secret);
+    if (sk) OQS_MEM_cleanse(sk, kem->length_secret_key);
+
+    free(pk);
+    free(sk);
+    free(ct);
+    free(ss_bob);
+    free(ss_alice);
+
+    OQS_KEM_free(kem);
+    return EXIT_SUCCESS;
 }
