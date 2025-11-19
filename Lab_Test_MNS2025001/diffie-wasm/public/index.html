@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Diffie-Hellman Key Exchange</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #dfefff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: #cfe6ff;
+            padding: 30px;
+            border: 1px solid #888;
+            width: 360px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        label {
+            color: #13314a;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input {
+            padding: 6px;
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid #aaa;
+        }
+
+        button {
+            display: block;
+            margin: 14px auto;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: #eee;
+            border: 1px solid #999;
+            cursor: pointer;
+        }
+
+        .resultBox {
+            border: 2px solid #333;
+            padding: 10px;
+            margin-top: 12px;
+            background: #fff;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+
+        <div class="field">
+            <label>Enter the Value of p:</label>
+            <input id="p" type="number" />
+        </div>
+
+        <div class="field">
+            <label>Enter the Value of g:</label>
+            <input id="g" type="number" />
+        </div>
+
+        <button id="connect">CONNECT</button>
+
+        <div id="resultBox" class="resultBox" hidden>
+            <pre id="resultText"></pre>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
