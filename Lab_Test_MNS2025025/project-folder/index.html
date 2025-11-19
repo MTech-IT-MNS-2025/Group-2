@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diffie-Hellman Key Exchange</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 500px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+        .result h3 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Diffie-Hellman Key Exchange</h1>
+        
+        <div class="form-group">
+            <label for="p">Enter the Value of p:</label>
+            <input type="number" id="p" placeholder="Enter prime number p">
+        </div>
+        
+        <div class="form-group">
+            <label for="g">Enter the Value of g:</label>
+            <input type="number" id="g" placeholder="Enter generator g">
+        </div>
+        
+        <button onclick="connect()">CONNECT</button>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>Results:</h3>
+            <p><strong>K = </strong><span id="K-value"></span></p>
+            <p><strong>y = </strong><span id="y-value"></span></p>
+            <p><strong>a = </strong><span id="a-value"></span></p>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+</body>
+</html>
