@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Diffie-Hellman Key Exchange Implementation
 
-## Getting Started
+## Project Overview
+This project implements a complete Diffie-Hellman Key Exchange protocol using C, WebAssembly, Next.js, and Node.js for secure key establishment between client and server.
 
-First, run the development server:
+## Platform & Tools Used
+- **Platform**: Ubuntu Linux
+- **Tools**: Node.js, Next.js, React, JavaScript, Emscripten, WebAssembly
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+## 📁 Directory Structure
+```
+Lab_Test_MNS2025004/
+├── app/
+│ ├── api/
+│ │ └── compute/
+│ │ └── route.js
+│ ├── globals.css
+│ ├── layout.js
+│ └── page.js
+├── lib/
+│ └── wasm-module.js
+├── public/
+│ └── myProg.wasm
+├── myProg.c
+├── package.json
+└── README.md
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Protocol Workflow
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Client Side
+1. User inputs prime `p` and generator `g`
+2. Client generates random private value `a ∈ Z_p*`
+3. Client computes `x = g^a mod p` using WebAssembly
+4. Client sends `<p, g, x>` to server
+5. Displays results: `K` (shared key), `y` (server public value), `a` (client private value)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Server Side
+1. Receives `<p, g, x>` from client
+2. Generates random private value `b ∈ Z_p*`
+3. Computes `y = g^b mod p` and `K = x^b mod p`
+4. Sends `<K, y>` back to client
 
-## Learn More
+## Commands to Run
 
-To learn more about Next.js, take a look at the following resources:
+### Compile WebAssembly
+```bash
+emcc myProg.c -o public/myProg.wasm -s WASM=1 -s EXPORTED_FUNCTIONS='["_modexp"]' -s EXPORTED_RUNTIME_METHODS='["ccall"]' -s STANDALONE_WASM
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ▶️ Running the Project
 
-## Deploy on Vercel
+### Install dependencies:
+```bash
+npm install
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Run Development Server:
+```bash
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Expected:
+```
+Server listening on http://localhost:3000
+```
+
+### Open frontend:
+Go to:
+```
+http://localhost:3000
+```
+
+Enter values for `p` and `g`, then press **CONNECT**.
+
+You will see:
+```
+K = <shared key>
+y = <server public value>
+a = <client private value>
+```
+
+---
+
+## 🧪 Correctness Check
+The shared key satisfies:
+```
+K = y^a mod p = x^b mod p
+```
+ensuring correct Diffie–Hellman key agreement.
+
+---
+
+## 🛠 Tools / Software Used
+- Ubuntu (Linux)
+- Node.js
+- Next.js
+- React
+- Emscripten (WASM compiler)
+- WebAssembly
+- md5sum (Linux utility)
+
+---
+
+## 🔢 MD5 Digest Command
+After zipping your project:
+```bash
+md5sum lab_test.zip
+```
+
+---
+
+## 🔒 Security Notes
+- Project is for **educational** purposes
+- Real cryptographic systems must use verified libraries
+- Choose sufficiently large prime `p` for real-world security
+
+---
+
+## 📄 License
+MIT License — free to use and modify.
+
+---
+
+# 🎉 End of README.md
